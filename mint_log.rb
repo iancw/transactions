@@ -1,8 +1,27 @@
-class Transaction
-  attr_accessor :amount
+def sanitize method_name
+  method_name.downcase.gsub(/\s+/, '_')
+end
 
-  def initialize amount
-    @amount = amount
+class Transaction
+
+  def initialize header, data
+    header.each_with_index do |key, idx|
+      define_singleton_method sanitize(key) do
+        if key.eql? 'Amount'
+          data[idx].to_f * pos_neg
+        else
+          data[idx]
+        end
+      end
+    end
+  end
+
+  def pos_neg
+    if transaction_type.eql? 'debit'
+      -1.0
+    else
+      1.0
+    end
   end
 end
 
@@ -14,7 +33,7 @@ class MintLog
   end
 
   def <<(array)
-    @transactions << build_trans(array)
+    @transactions << Transaction.new(@header, array)
 
   end
 
@@ -25,29 +44,4 @@ class MintLog
   def [](i)
     @transactions[i]
   end
-
-
-  private
-
-  def amount_idx
-    @header.index 'Amount'
-  end
-
-  def trans_type_idx
-    @header.index 'Transaction type'
-  end
-
-  def pos_neg array
-    if array[trans_type_idx] == 'debit'
-      -1.0
-    else
-      1.0
-    end
-  end
-
-  def build_trans array
-    amount = array[amount_idx].to_f * pos_neg(array)
-    Transaction.new amount
-  end
-
 end
