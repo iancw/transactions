@@ -4,8 +4,8 @@ describe MintLog do
 
   before do
     @log = MintLog.new ['Date', 'Amount', 'Transaction type', 'Desc']
-    @log << ['9/25/2015', '1.0', 'debit', 'First transaction']
     @log << ['9/26/2015', '1.0', 'credit', 'Second transaction']
+    @log << ['9/25/2015', '1.0', 'debit', 'First transaction']
   end
 
   it 'Should first transaction negative' do
@@ -41,5 +41,6 @@ describe MintLog do
     "9/25/2015,-1.0,debit,First transaction,-1.0\n" <<
     "9/26/2015,1.0,credit,Second transaction,0.0\n"
   end
+
 
 end
