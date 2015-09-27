@@ -32,4 +32,14 @@ describe MintLog do
     expect(@log[1].desc).to eq 'Second transaction'
   end
 
+  it 'Should have cumulative amount' do
+    expect(@log[1].cumulative_amount).to eq 0.0
+  end
+
+  it 'Should export data to CSV' do
+    expect(@log.as_csv).to eq "Date,Amount,Transaction type,Desc,Cumulative amount\n" <<
+    "9/25/2015,-1.0,debit,First transaction,-1.0\n" <<
+    "9/26/2015,1.0,credit,Second transaction,0.0\n"
+  end
+
 end
