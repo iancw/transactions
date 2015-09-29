@@ -3,9 +3,10 @@ require './mint_log'
 describe MintLog do
 
   before do
-    @log = MintLog.new ['Date', 'Amount', 'Transaction type', 'Desc']
-    @log << ['9/26/2015', '1.0', 'credit', 'Second transaction']
-    @log << ['9/25/2015', '1.0', 'debit', 'First transaction']
+    @builder = LogBuilder.new ['Date', 'Amount', 'Transaction type', 'Desc']
+    @builder << ['9/26/2015', '1.0', 'credit', 'Second transaction']
+    @builder << ['9/25/2015', '1.0', 'debit', 'First transaction']
+    @log = @builder.build
   end
 
   it 'Should first transaction negative' do
@@ -37,10 +38,9 @@ describe MintLog do
   end
 
   it 'Should export data to CSV' do
-    expect(@log.as_csv).to eq "Date,Amount,Transaction type,Desc,Cumulative amount\n" <<
-    "9/25/2015,-1.0,debit,First transaction,-1.0\n" <<
-    "9/26/2015,1.0,credit,Second transaction,0.0\n"
+    expect(@log.as_array).to eq [
+      ["Date",'Amount','Transaction type','Desc','Cumulative amount'],
+      ['9/25/2015',-1.0,'debit','First transaction',-1.0],
+      ['9/26/2015',1.0,'credit','Second transaction',0.0]]
   end
-
-
 end

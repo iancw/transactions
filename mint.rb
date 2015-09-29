@@ -6,29 +6,18 @@ require 'uri'
 class Mint
 
   def format_date date
-    '06/01/2014'
+    date.strftime('%m/%d/%Y')
   end
 
-  def mint_uri date_range
+  def mint_uri start_date, end_date
     'https://wwws.mint.com/transactionDownload.event?startDate=' <<
-    "#{format_date(date_range.start)}" <<
-    "&endDate=#{format_date(date_range.end)}"
+    "#{format_date(start_date)}" <<
+    "&endDate=#{format_date(end_date)}"
   end
 
-  def fetch date_range
-    uri = URI.parse mint_uri(date_range)
-    response = Net::HTTP.get_response uri
-    p response.body
-  end
-
-end
-
-def old_stuff
-
-  ARGV.each do |csv_file|
-    csv = CSV.open(csv_file)
-    header = csv.first
-    amount_col = header.index "Amount"
-    type_col = header.index "Transaction Type"
+  def fetch start_date, end_date
+    puts "Fetching from #{uri}"
+    `open #{mint_uri(start_date, end_date)}`
   end
 end
+

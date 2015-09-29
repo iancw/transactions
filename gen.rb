@@ -6,11 +6,14 @@ if ARGV.empty?
   exit
 end
 
-csv = CSV.open ARGV[0]
-log = MintLog.new csv.first
-csv.each do |row|
-  log << row
+in_csv = CSV.open ARGV[0]
+builder = LogBuilder.new in_csv.first
+in_csv.each do |row|
+  builder << row
 end
-File.open('processed.csv', 'w') do |file|
-  file.write log.as_csv
+log = builder.build
+CSV.open('processed.csv', 'wb') do |out_csv|
+  log.as_array.each do |row|
+    out_csv << row
+  end
 end

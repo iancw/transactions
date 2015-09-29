@@ -1,3 +1,5 @@
+require 'date'
+
 def sanitize method_name
   method_name.downcase.gsub(/\s+/, '_')
 end
@@ -10,8 +12,10 @@ class Transaction
     define_methods
   end
 
-  def as_csv
-    as_array(@header).join ','
+  def as_array
+    @header.map do |col|
+      self.send sanitize(col)
+    end
   end
 
   def add_field name, value
@@ -20,6 +24,10 @@ class Transaction
     end
     @data << value
     define_method name, value
+  end
+
+  def datetime
+    DateTime.strptime(date, '%m/%d/%Y')
   end
 
   private
@@ -36,19 +44,11 @@ class Transaction
     else
       value
     end
-
   end
 
   def define_methods
     @header.each_with_index do |key, idx|
       define_method key, @data[idx]
-    end
-  end
-
-
-  def as_array headers
-    headers.map do |header|
-      self.send sanitize(header)
     end
   end
 
@@ -62,26 +62,43 @@ class Transaction
 
 end
 
-class MintLog
-
+class LogBuilder
   def initialize header
     @header = header
     @transactions = []
   end
 
-  def prev_total
-    if @transactions.empty?
-      0.0
-    else
-      @transactions.last.cumulative_amount
+  def <<(array)
+    @transactions << Transaction.new(@header, array)
+  end
+
+  def add_cumulative_totals!
+    prev_total = 0.0
+    @transactions.each do |t|
+      cur_total = prev_total + t.amount
+      t.add_field('Cumulative amount', cur_total.round(2))
+      prev_total = cur_total
     end
   end
 
-  def <<(array)
-    t = Transaction.new(@header, array)
-    t.add_field('Cumulative amount', prev_total + t.amount)
-    @transactions << t
+  def sort!
+    @transactions.sort! { |a, b| a.datetime <=> b.datetime}
   end
+
+  def build
+    sort!
+    add_cumulative_totals!
+    MintLog.new @header, @transactions
+  end
+end
+
+class MintLog
+
+  def initialize header, transactions
+    @header = header
+    @transactions = transactions
+  end
+
 
   def first
     @transactions[0]
@@ -91,11 +108,12 @@ class MintLog
     @transactions[i]
   end
 
-  def as_csv
-    exp = @header.join ','
-    exp << "\n"
-    exp << @transactions.map { |trans| trans.as_csv }.join("\n")
-    exp << "\n"
-    exp
+  def as_array
+    arr = []
+    arr << @header
+    @transactions.each do |trans|
+      arr << trans.as_array
+    end
+    arr
   end
 end
